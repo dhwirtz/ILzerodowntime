@@ -1,0 +1,11 @@
+services:
+  web:
+    container_name: blue
+    build: ./blue
+    ports:
+      - "8081:80"
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge
