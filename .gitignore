@@ -1,2 +1,3 @@
-./blue/app/*
-./green/app/*
+/blue/app/*
+/green/app/*
+/shared/

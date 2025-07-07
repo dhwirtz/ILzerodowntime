@@ -1,0 +1,56 @@
+services:
+  web:
+    build: ./php
+    ports:
+      - "9001:9001"
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - DB_NAME=magento
+      - DB_USER=magento
+      - DB_PASSWORD=magento
+      - REDIS_HOST=redis
+
+  db:
+    image: mysql:5.7
+    volumes:
+      - ../shared/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=magento
+      - MYSQL_USER=magento
+      - MYSQL_PASSWORD=magento
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - ../shared/redis:/data
+
+  opensearch:
+    image: opensearchproject/opensearch:2.4.0
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - plugins.security.disabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+
+volumes:
+  opensearch_data:
+
+networks:
+  default:
+    name: magento-network

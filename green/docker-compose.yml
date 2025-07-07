@@ -1,0 +1,46 @@
+services:
+  web:
+    build: ./php
+    ports:
+      - "9002:9000"
+    volumes:
+      - ./app:/var/www/html
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+    environment:
+      - DB_HOST=db
+      - DB_NAME=magento
+      - DB_USER=magento
+      - DB_PASSWORD=magento
+      - REDIS_HOST=redis
+      - ELASTICSEARCH_HOST=elasticsearch
+
+  db:
+    image: mysql:5.7
+    volumes:
+      - ../shared/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=magento
+      - MYSQL_USER=magento
+      - MYSQL_PASSWORD=magento
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - ../shared/redis:/data
+
+  elasticsearch:
+    image: elasticsearch:7.9.3
+    volumes:
+      - ../shared/elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+
+networks:
+  default:
+    name: magento-network
