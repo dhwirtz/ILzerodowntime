@@ -1,10 +1,11 @@
-FROM php:7.4-fpm
+FROM php:8.1-fpm
 
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libxml2-dev \
     libzip-dev \
+    libxslt-dev \
     libonig-dev \
     zip \
     unzip
@@ -17,13 +18,16 @@ RUN docker-php-ext-install -j$(nproc) \
     zip \
     soap \
     bcmath \
-    intl
+    intl \
+    xsl \
+    sockets \
+    pcntl
 
 RUN pecl install redis && docker-php-ext-enable redis
 
 WORKDIR /var/www/html
 
-COPY ./app /var/www/html
+COPY php.ini /usr/local/etc/php/conf.d/magento.ini
 
 RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type d -exec chmod 755 {} \; \

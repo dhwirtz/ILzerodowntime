@@ -1,22 +1,28 @@
 services:
   web:
     build: ./php
+    container_name: magento-web
     ports:
-      - "9001:9001"
+      - "9001:9000"
     volumes:
       - ./app:/var/www/html
     depends_on:
       - db
       - redis
     environment:
-      - DB_HOST=db
+      - DB_HOST=db 
       - DB_NAME=magento
       - DB_USER=magento
       - DB_PASSWORD=magento
       - REDIS_HOST=redis
+    networks:
+      - magento-network 
 
   db:
     image: mysql:5.7
+    container_name: magento-db
+    ports:
+      - "3307:3307"
     volumes:
       - ../shared/mysql:/var/lib/mysql
     environment:
@@ -24,15 +30,18 @@ services:
       - MYSQL_DATABASE=magento
       - MYSQL_USER=magento
       - MYSQL_PASSWORD=magento
+    networks:
+      - magento-network
 
   redis:
     image: redis:alpine
     volumes:
       - ../shared/redis:/data
+    networks:
+      - magento-network
 
   opensearch:
     image: opensearchproject/opensearch:2.4.0
-    container_name: opensearch
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
@@ -47,10 +56,13 @@ services:
     ports:
       - "9200:9200"
       - "9600:9600"
+    networks:
+      - magento-network
 
 volumes:
   opensearch_data:
 
 networks:
-  default:
+  magento-network: 
+    driver: bridge
     name: magento-network
