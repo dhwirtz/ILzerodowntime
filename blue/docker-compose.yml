@@ -1,13 +1,16 @@
+networks:
+  ipvlan20:
+    external: true
+    name: ipvlan20 
+  ipvlan40:
+    external: true
+    name: ipvlan40 
 services:
   web:
     build: ./php
-    container_name: magento-web
-    ports:
-      - "9001:9000"
     volumes:
       - ./app:/var/www/html
     depends_on:
-      - db
       - redis
     environment:
       - DB_HOST=db 
@@ -16,53 +19,18 @@ services:
       - DB_PASSWORD=magento
       - REDIS_HOST=redis
     networks:
-      - magento-network 
-
-  db:
-    image: mysql:5.7
-    container_name: magento-db
-    ports:
-      - "3307:3307"
-    volumes:
-      - ../shared/mysql:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=magento
-      - MYSQL_USER=magento
-      - MYSQL_PASSWORD=magento
-    networks:
-      - magento-network
+      ipvlan20:
+        ipv4_address: 192.168.70.130
+      ipvlan40: 
+        ipv4_address: 192.168.72.3 
 
   redis:
     image: redis:alpine
     volumes:
       - ../shared/redis:/data
     networks:
-      - magento-network
+      ipvlan20:
+        ipv4_address: 192.168.70.131
+      ipvlan40: 
+        ipv4_address: 192.168.72.2
 
-  opensearch:
-    image: opensearchproject/opensearch:2.4.0
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
-      - plugins.security.disabled=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - opensearch_data:/usr/share/opensearch/data
-    ports:
-      - "9200:9200"
-      - "9600:9600"
-    networks:
-      - magento-network
-
-volumes:
-  opensearch_data:
-
-networks:
-  magento-network: 
-    driver: bridge
-    name: magento-network

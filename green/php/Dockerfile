@@ -1,4 +1,11 @@
-FROM php:8.1-fpm
+FROM php:8.2-fpm
+
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    && docker-php-ext-install pdo_mysql mysqli \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN echo "pdo_mysql.default_socket=/var/run/mysqld/mysqld.sock" >> /usr/local/etc/php/conf.d/docker-php-ext-pdo_mysql.ini
 
 RUN apt-get update && apt-get install -y \
     libpng-dev \
@@ -8,7 +15,9 @@ RUN apt-get update && apt-get install -y \
     libxslt-dev \
     libonig-dev \
     zip \
-    unzip
+    unzip \
+    mariadb-client \
+    redis-tools
 
 RUN docker-php-ext-configure gd --with-jpeg
 RUN docker-php-ext-install -j$(nproc) \

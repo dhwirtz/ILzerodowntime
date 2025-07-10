@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+set -e
+
+if ! docker version > /dev/null 2>&1; then
+    echo "ERROR: Need install docker."
+    exit 1
+fi
+
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# input location magento
+read -p '- Location for Magento2: ' DIR
+DIR="${DIR/#\~/$HOME}"
+
+# check value
+if [ -z "$DIR" ]
+then
+    printf "${RED}ERROR: empty value${NC}\n"
+    exit 2
+else
+    # check value have space
+    if [ "$DIR" != "${DIR//[[:blank:]]/}" ]
+    then
+        printf "${RED}ERROR: invalid value${NC}\n"
+        exit 2
+    else
+        # check folder exist
+        if [ -d "$DIR" ]
+        then
+            if [ "$(ls -A $DIR)" ]; then
+                printf "${RED}ERROR: $DIR is not empty${NC}\n"
+                exit 2
+            fi
+        else
+            # create folder when folder not exist
+            mkdir -p $DIR
+        fi
+    fi
+fi
+echo "Location: $DIR"
+
+printf "\n"
+# select magento edition
+REPOSITORY_URL=''
+PACKAGE=''
+NEED_AUTH=false
+echo "- Select Magento Edition:"
+PS3='Enter your choice: '
+options=("Magento Open Source" "Adobe Commerce" "Mage-OS")
+select opt in "${options[@]}"
+do
+    case $opt in
+        "Magento Open Source")
+            REPOSITORY_URL='https://repo.magento.com/'
+            PACKAGE='magento/project-community-edition'
+            NEED_AUTH=true
+            break
+            ;;
+        "Adobe Commerce")
+            REPOSITORY_URL='https://repo.magento.com/'
+            PACKAGE='magento/project-enterprise-edition'
+            NEED_AUTH=true
+            break
+            ;;
+        "Mage-OS")
+            REPOSITORY_URL='https://repo.mage-os.org/'
+            PACKAGE='mage-os/project-community-edition'
+            break
+            ;;
+        *) echo "invalid option $REPLY";;
+    esac
+done
+MAGENTO_EDITION=$opt
+
+printf "\n"
+# input version magento
+read -p '- Magento version: ' VERSION
+if [ ! -z "$VERSION" ]
+then
+    VERSION=":$VERSION"
+fi
+
+printf "\n"
+# select composer version
+echo "- Select composer version:"
+PS3='Enter your choice: '
+options=("1" "2.1" "2.2" "2.5")
+select opt in "${options[@]}"
+do
+    case $opt in
+        "1")
+            break
+            ;;
+        "2.1")
+            break
+            ;;
+        "2.2")
+            break
+            ;;
+        "2.5")
+            break
+            ;;
+        *) echo "invalid option $REPLY";;
+    esac
+done
+COMPOSER_VERSION=$opt
+
+mkdir -p ~/.composer
+mkdir -p ~/.ssh
+touch ~/.config/git/credentials
+
+composer_run() {
+    docker run -it --rm \
+        -v $DIR:/app \
+        -v ~/.composer:/tmp \
+        -u $(id -u):$(id -g) \
+        -e COMPOSER_ALLOW_SUPERUSER=1 \
+        --security-opt seccomp:unconfined \
+        composer:$COMPOSER_VERSION "$@"
+}
+
+if [ "$NEED_AUTH" = true ]; then
+    if CURRENT_PUBLIC_KEY="$(composer_run config --global http-basic.repo.magento.com.username 2>/dev/null)"; then
+        printf "\n- Current public key: $CURRENT_PUBLIC_KEY"
+    fi
+
+    if CURRENT_PRIVATE_KEY="$(composer_run config --global http-basic.repo.magento.com.password 2>/dev/null)"; then
+        printf "\n Current private key: $CURRENT_PRIVATE_KEY"
+    fi
+
+    printf "\n"
+    printf '\n- Authentication required (repo.magento.com):'
+    printf '\nLeave it if you had already configured this access and dont want to override it by this magento downloader.\n'
+    # input location magento
+    read -p 'Public key: ' PUBLIC_KEY
+    read -p 'Private key: ' PRIVATE_KEY
+
+    if [ -n "$PUBLIC_KEY" ] && [ -n "$PRIVATE_KEY" ]; then
+        composer_run config -g http-basic.repo.magento.com $PUBLIC_KEY $PRIVATE_KEY
+    fi
+fi
+
+# download magento
+printf "\n- Download $MAGENTO_EDITION:\n"
+composer_run create-project --repository-url=$REPOSITORY_URL \
+            $PACKAGE$VERSION . \
+            --ignore-platform-reqs --prefer-dist

@@ -1,46 +1,54 @@
+networks:
+  ipvlan30:
+    external: true
+    name: ipvlan30 
+  ipvlan40:
+    external: true
+    name: ipvlan40 
 services:
   web:
     build: ./php
-    ports:
-      - "9002:9000"
     volumes:
       - ./app:/var/www/html
     depends_on:
-      - db
       - redis
-      - elasticsearch
     environment:
-      - DB_HOST=db
+      - DB_HOST=db 
       - DB_NAME=magento
       - DB_USER=magento
       - DB_PASSWORD=magento
       - REDIS_HOST=redis
-      - ELASTICSEARCH_HOST=elasticsearch
-
-  db:
-    image: mysql:5.7
-    volumes:
-      - ../shared/mysql:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=magento
-      - MYSQL_USER=magento
-      - MYSQL_PASSWORD=magento
+    networks:
+      ipvlan30:
+        ipv4_address: 192.168.71.130
+      ipvlan40:  
 
   redis:
     image: redis:alpine
     volumes:
       - ../shared/redis:/data
+    networks:
+      ipvlan30:
+        ipv4_address: 192.168.71.131
+      ipvlan40:
 
-  elasticsearch:
-    image: elasticsearch:7.9.3
-    volumes:
-      - ../shared/elasticsearch:/usr/share/elasticsearch/data
+  opensearch:
+    image: opensearchproject/opensearch:2.4.0
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - plugins.security.disabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    networks:
+      ipvlan30:
+        ipv4_address: 192.168.71.132
+      ipvlan40:
 
-networks:
-  default:
-    name: magento-network
+volumes:
+  opensearch_data:
