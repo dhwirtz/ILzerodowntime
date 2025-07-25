@@ -1,10 +1,7 @@
 networks:
   ipvlan20:
     external: true
-    name: ipvlan20 
-  ipvlan40:
-    external: true
-    name: ipvlan40 
+    name: ipvlan20
 services:
   web:
     build: ./php
@@ -13,16 +10,13 @@ services:
     depends_on:
       - redis
     environment:
-      - DB_HOST=db 
       - DB_NAME=magento
       - DB_USER=magento
       - DB_PASSWORD=magento
       - REDIS_HOST=redis
     networks:
       ipvlan20:
-        ipv4_address: 192.168.70.130
-      ipvlan40: 
-        ipv4_address: 192.168.72.3 
+        ipv4_address: 192.168.70.4
 
   redis:
     image: redis:alpine
@@ -30,7 +24,4 @@ services:
       - ../shared/redis:/data
     networks:
       ipvlan20:
-        ipv4_address: 192.168.70.131
-      ipvlan40: 
-        ipv4_address: 192.168.72.2
-
+        ipv4_address: 192.168.70.5

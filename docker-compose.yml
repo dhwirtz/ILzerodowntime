@@ -9,10 +9,9 @@ services:
       - MYSQL_USER=magento
       - MYSQL_PASSWORD=magento
     networks:
-      ipvlan40:
-        ipv4_address: 192.168.72.130
       ipvlan20:
-        ipv4_address: 192.168.70.3
+        ipv4_address: 192.168.70.2
+
   opensearch:
       image: opensearchproject/opensearch:2.4.0
       environment:
@@ -27,21 +26,13 @@ services:
       volumes:
         - opensearch_data:/usr/share/opensearch/data
       networks:
-        ipvlan40:
-          ipv4_address: 192.168.72.131
         ipvlan20:
-          ipv4_address: 192.168.70.2
+          ipv4_address: 192.168.70.3
         
 networks:
-  ipvlan40:
-    external: true
-    name: ipvlan40 
   ipvlan20:
     external: true
     name: ipvlan20
-  ipvlan30:
-    external: true
-    name: ipvlan30 
 
 volumes:
   opensearch_data:
