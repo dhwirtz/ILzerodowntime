@@ -1,0 +1,20 @@
+x-logging:
+  logging: &logging
+    options:
+      max-size: "10m"
+      max-file: "2"
+
+services:
+  proxy:
+    image: rogerdz/traefik
+    volumes:
+      - ./conf/traefik:/etc/traefik:ro
+      - /var/log/treafik:/var/log/treafik
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      CURRENT_WEB_PORT: ${CURRENT_WEB_PORT}
+    network_mode: host
+    security_opt:
+      - no-new-privileges:true
+    container_name: proxy
+    logging: *logging

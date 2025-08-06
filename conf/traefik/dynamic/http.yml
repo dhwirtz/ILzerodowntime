@@ -1,0 +1,31 @@
+http:
+  middlewares:
+    compression:
+      compress:
+        excludedContentTypes:
+          - text/event-stream
+        encodings:
+          - gzip
+    secHeaders:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: "SAMEORIGIN"
+        customResponseHeaders:
+          server: ""
+          x-powered-by: ""
+  routers:
+    magento:
+      entryPoints:
+        - http
+      service: magento
+      rule: Host(`a.test`)
+  services:
+    magento:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:8082

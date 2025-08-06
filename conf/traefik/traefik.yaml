@@ -1,0 +1,35 @@
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+api:
+  insecure: false
+  dashboard: false
+  disabledashboardad: true
+  # debug: true
+
+# accessLog: {}
+accessLog:
+  filePath: "/var/log/treafik/access.log"
+  bufferingSize: 100
+  filters:
+    minDuration: "1ms"
+  fields:
+    headers:
+      names:
+        User-Agent: keep
+
+serversTransport:
+  insecureSkipVerify: true
+
+# log:
+#     level: DEBUG
+
+entryPoints:
+  http:
+    address: ":80"
+    reusePort: true
+providers:
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
